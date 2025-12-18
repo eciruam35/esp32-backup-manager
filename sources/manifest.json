@@ -1,0 +1,108 @@
+{
+    "id": "esp32_backup_manager",
+    "name": "ESP32 Backup Manager",
+    "description": {
+        "en": "Automatic backup of ESP32 files via FTP",
+        "fr": "Sauvegarde automatique des fichiers ESP32 via FTP"
+    },
+    "version": "1.0.0~ynh1",
+    "url": "https://github.com/yourusername/esp32-backup-manager",
+    "license": "GPL-3.0",
+    "maintainer": {
+        "name": "Your Name",
+        "email": "your@email.com"
+    },
+    "multi_instance": false,
+    "services": [
+        "nginx",
+        "php7.4",
+        "mysql"
+    ],
+    "requirements": {
+        "yunohost": ">= 4.3.0"
+    },
+    "arguments": {
+        "install": [
+            {
+                "name": "domain",
+                "type": "domain",
+                "ask": {
+                    "en": "Choose a domain for the application",
+                    "fr": "Choisissez un domaine pour l'application"
+                },
+                "example": "domain.org"
+            },
+            {
+                "name": "path",
+                "type": "path",
+                "ask": {
+                    "en": "Choose a path for the application",
+                    "fr": "Choisissez un chemin pour l'application"
+                },
+                "example": "/esp32-backup",
+                "default": "/esp32-backup"
+            },
+            {
+                "name": "admin",
+                "type": "user",
+                "ask": {
+                    "en": "Choose an admin user",
+                    "fr": "Choisissez un utilisateur administrateur"
+                }
+            },
+            {
+                "name": "ftp_host",
+                "type": "string",
+                "ask": {
+                    "en": "ESP32 FTP host (IP or hostname)",
+                    "fr": "Hôte FTP ESP32 (IP ou nom d'hôte)"
+                },
+                "example": "192.168.1.100"
+            },
+            {
+                "name": "ftp_port",
+                "type": "string",
+                "ask": {
+                    "en": "ESP32 FTP port",
+                    "fr": "Port FTP ESP32"
+                },
+                "default": "21"
+            },
+            {
+                "name": "ftp_user",
+                "type": "string",
+                "ask": {
+                    "en": "ESP32 FTP username",
+                    "fr": "Nom d'utilisateur FTP ESP32"
+                }
+            },
+            {
+                "name": "ftp_password",
+                "type": "password",
+                "ask": {
+                    "en": "ESP32 FTP password",
+                    "fr": "Mot de passe FTP ESP32"
+                }
+            },
+            {
+                "name": "backup_interval",
+                "type": "string",
+                "ask": {
+                    "en": "Backup interval (daily, weekly, hourly)",
+                    "fr": "Intervalle de sauvegarde (daily, weekly, hourly)"
+                },
+                "choices": ["daily", "weekly", "hourly"],
+                "default": "daily"
+            },
+            {
+                "name": "retention_days",
+                "type": "string",
+                "ask": {
+                    "en": "Number of days to keep backups",
+                    "fr": "Nombre de jours à conserver les sauvegardes"
+                },
+                "default": "30"
+            }
+        ]
+    }
+}

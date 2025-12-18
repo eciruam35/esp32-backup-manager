@@ -1,0 +1,71 @@
+#!/bin/bash
+# scripts/remove
+
+source /usr/share/yunohost/helpers
+
+app=$YNH_APP_INSTANCE_NAME
+
+#=================================================
+# STOP AND REMOVE SERVICE
+#=================================================
+ynh_script_progression --message="Arrêt du service..."
+systemctl stop $app 2>/dev/null || true
+systemctl disable $app 2>/dev/null || true
+rm -f /etc/systemd/system/$app.service
+
+#=================================================
+# REMOVE CRON
+#=================================================
+ynh_script_progression --message="Suppression du cron..."
+rm -f /etc/cron.d/$app
+
+#=================================================
+# REMOVE NGINX CONFIGURATION
+#=================================================
+ynh_script_progression --message="Suppression de la configuration Nginx..."
+ynh_remove_nginx_config
+
+#=================================================
+# REMOVE LOGROTATE CONFIGURATION
+#=================================================
+ynh_script_progression --message="Suppression de logrotate..."
+ynh_remove_logrotate
+
+#=================================================
+# REMOVE APP MAIN DIR
+#=================================================
+ynh_script_progression --message="Suppression des fichiers de l'application..."
+final_path=/var/www/$app
+rm -rf $final_path
+
+#=================================================
+# REMOVE CONFIG DIR
+#=================================================
+ynh_script_progression --message="Suppression de la configuration..."
+config_dir=/var/www/$app/../config
+rm -rf $config_dir
+
+#=================================================
+# REMOVE BACKUP DATA (optionnel - demande confirmation)
+#=================================================
+if [ "$1" = "purge" ]; then
+    ynh_script_progression --message="Purge des données de backup..."
+    backup_dir=/home/yunohost.backup/archives/esp32-backup
+    if [ -d "$backup_dir" ]; then
+        rm -rf $backup_dir
+    fi
+else
+    ynh_script_progression --message="Conservation des données de backup..."
+    echo "Les données de backup sont conservées dans /home/yunohost.backup/archives/esp32-backup"
+fi
+
+#=================================================
+# REMOVE SETTINGS
+#=================================================
+ynh_script_progression --message="Suppression des paramètres..."
+ynh_app_setting_delete $app --all
+
+#=================================================
+# END OF SCRIPT
+#=================================================
+ynh_script_progression --message="Désinstallation terminée."

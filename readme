@@ -1,0 +1,62 @@
+# ESP32 Backup Manager
+
+Application Yunohost pour la sauvegarde automatique des fichiers d'un ESP32 via FTP.
+
+## Fonctionnalités
+
+- **Backup automatique** : Planification horaire/quotidienne/hebdomadaire
+- **Interface web** : Gestion complète via navigateur
+- **Connexion FTP** : Support du protocole FTP standard
+- **Compression** : Archives ZIP automatiques
+- **Rétention** : Nettoyage automatique des vieux backups
+- **Monitoring** : Logs détaillés et statistiques
+- **Sécurité** : Authentification Yunohost SSO
+
+## Prérequis ESP32
+
+1. **Serveur FTP** activé sur l'ESP32
+2. **Accès réseau** : L'ESP32 doit être accessible depuis le serveur Yunohost
+3. **Compte FTP** : Créer un utilisateur/mot de passe sur l'ESP32
+
+## Installation
+
+1. Via l'interface Yunohost : "Installer une application personnalisée"
+2. URL du dépôt : `https://github.com/votre-utilisateur/esp32-backup-manager`
+3. Remplir les paramètres :
+   - Domaine et chemin
+   - Utilisateur administrateur
+   - Paramètres FTP de l'ESP32
+   - Intervalle de backup
+   - Jours de rétention
+
+## Configuration ESP32
+
+Assurez-vous que votre ESP32 a :
+- Une IP fixe ou un nom DNS
+- Serveur FTP activé
+- Port 21 ouvert (ou autre)
+- Fichiers accessibles en lecture
+
+## Fichiers de backup
+
+Les backups sont stockés dans :
+`/home/yunohost.backup/archives/esp32-backup/`
+
+Format : `esp32_backup_YYYY-MM-DD_HH-MM-SS.zip`
+
+## Logs
+
+- Application : `/var/log/$app/` (géré par logrotate)
+- Backup : `/home/yunohost.backup/archives/esp32-backup/backup.log`
+- Cron : `/home/yunohost.backup/archives/esp32-backup/cron.log`
+
+## Sécurité
+
+- Authentification via SSOWAT Yunohost
+- Connexions FTP non-chiffrées (à améliorer avec FTPS si disponible)
+- Fichiers de config protégés (chmod 600)
+- Accès restreint aux dossiers système
+
+## Développement
+
+Structure :
