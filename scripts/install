@@ -1,183 +1,23 @@
 #!/bin/bash
-# scripts/install
-
-#=================================================
-# GENERIC START
-#=================================================
-# IMPORT GENERIC HELPERS
 source /usr/share/yunohost/helpers
 
-#=================================================
-# RETRIEVE ARGUMENTS FROM THE MANIFEST
-#=================================================
+# Get arguments
 domain=$YNH_APP_ARG_DOMAIN
 path_url=$YNH_APP_ARG_PATH
 admin=$YNH_APP_ARG_ADMIN
-ftp_host=$YNH_APP_ARG_FTP_HOST
-ftp_port=$YNH_APP_ARG_FTP_PORT
-ftp_user=$YNH_APP_ARG_FTP_USER
-ftp_password=$YNH_APP_ARG_FTP_PASSWORD
-backup_interval=$YNH_APP_ARG_BACKUP_INTERVAL
-retention_days=$YNH_APP_ARG_RETENTION_DAYS
-
 app=$YNH_APP_INSTANCE_NAME
 
-#=================================================
-# CHECK IF THE APP CAN BE INSTALLED WITH THESE ARGS
-#=================================================
-yunohost app checkurl $domain$path_url -a $app
-if [ $? -ne 0 ]; then
-    ynh_die "URL non disponible"
-fi
-
-#=================================================
-# STORE SETTINGS FROM MANIFEST
-#=================================================
-ynh_app_setting_set $app domain $domain
-ynh_app_setting_set $app path $path_url
-ynh_app_setting_set $app admin $admin
-
-#=================================================
-# STANDARD MODIFICATIONS
-#=================================================
-# FIND AND OPEN A PORT
-ynh_script_progression --message="Configuration du port..."
-ynh_find_port 3000
-port=$yunohost_port
-ynh_app_setting_set $app port $port
-
-#=================================================
-# INSTALL DEPENDENCIES
-#=================================================
-ynh_script_progression --message="Installation des dépendances..."
-ynh_install_app_dependencies "php7.4 php7.4-zip php7.4-ftp"
-
-#=================================================
-# CREATE DIRECTORY
-#=================================================
-ynh_script_progression --message="Création des répertoires..."
+# Create directory
 final_path=/var/www/$app
 mkdir -p $final_path
-mkdir -p /home/yunohost.backup/archives/esp32-backup
 
-#=================================================
-# DOWNLOAD, CHECK AND UNPACK SOURCE
-#=================================================
-ynh_script_progression --message="Installation des fichiers de l'application..."
+# Copy sources
 cp -a ../sources/* $final_path/
 
-#=================================================
-# NGINX CONFIGURATION
-#=================================================
-ynh_script_progression --message="Configuration de Nginx..."
+# Setup nginx
 ynh_add_nginx_config
 
-#=================================================
-# CREATE CONFIG FILE
-#=================================================
-ynh_script_progression --message="Création du fichier de configuration..."
+# Setup SSO
+ynh_permission_create --permission="main" --url="/" --allowed="$admin"
 
-config_file=$final_path/../config/esp32_backup.json
-cat > $config_file << EOF
-{
-    "ftp_host": "$ftp_host",
-    "ftp_port": $ftp_port,
-    "ftp_user": "$ftp_user",
-    "ftp_password": "$ftp_password",
-    "backup_interval": "$backup_interval",
-    "retention_days": $retention_days,
-    "last_backup": null,
-    "backup_count": 0
-}
-EOF
-
-# Protection du fichier de config
-chmod 600 $config_file
-chown www-data:www-data $config_file
-
-#=================================================
-# SETUP SSOWAT
-#=================================================
-ynh_script_progression --message="Configuration de l'authentification..."
-ynh_permission_create --permission="main" --url "/" --allowed "$admin"
-
-#=================================================
-# SETUP LOGROTATE
-#=================================================
-ynh_script_progression --message="Configuration de logrotate..."
-ynh_use_logrotate --logfile="/home/yunohost.backup/archives/esp32-backup/backup.log"
-
-#=================================================
-# SETUP CRON
-#=================================================
-ynh_script_progression --message="Configuration du cron..."
-
-# Déterminer la planification selon l'intervalle
-case $backup_interval in
-    "hourly")
-        cron_schedule="0 * * * *"
-        ;;
-    "weekly")
-        cron_schedule="0 2 * * 0"
-        ;;
-    "daily"|*)
-        cron_schedule="0 2 * * *"
-        ;;
-esac
-
-# Créer la tâche cron
-cron_file=/etc/cron.d/$app
-cat > $cron_file << EOF
-$cron_schedule root /usr/bin/php $final_path/cron.php >> /home/yunohost.backup/archives/esp32-backup/cron.log 2>&1
-EOF
-
-chmod 644 $cron_file
-
-#=================================================
-# SETUP SYSTEMD SERVICE (pour monitoring)
-#=================================================
-ynh_script_progression --message="Configuration du service systemd..."
-
-service_file=/etc/systemd/system/$app.service
-cat > $service_file << EOF
-[Unit]
-Description=ESP32 Backup Manager
-After=nginx.service
-
-[Service]
-Type=oneshot
-ExecStart=/usr/bin/php $final_path/cron.php
-User=www-data
-Group=www-data
-
-[Install]
-WantedBy=multi-user.target
-EOF
-
-systemctl daemon-reload
-
-#=================================================
-# START SERVICE
-#=================================================
-ynh_script_progression --message="Démarrage du service..."
-
-# Test de connexion initial
-if ! php $final_path/app.php --test-connection; then
-    ynh_print_warn "Impossible de se connecter à l'ESP32. Vérifiez les paramètres FTP."
-fi
-
-#=================================================
-# RELOAD NGINX
-#=================================================
-ynh_script_progression --message="Redémarrage de Nginx..."
-systemctl reload nginx
-
-#=================================================
-# END OF SCRIPT
-#=================================================
-ynh_script_progression --message="Installation de l'application terminée..."
-
-echo "L'application est installée à l'adresse: https://$domain$path_url"
-echo "Identifiants FTP: $ftp_user@$ftp_host:$ftp_port"
-echo "Backup interval: $backup_interval"
-echo "Rétention: $retention_days jours"
+echo "Installation complete!"

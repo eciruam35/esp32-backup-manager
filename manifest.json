@@ -1,0 +1,31 @@
+{
+    "id": "esp32_backup_manager",
+    "name": "ESP32 Backup Manager",
+    "description": {
+        "en": "Automatic backup of ESP32 files via FTP",
+        "fr": "Sauvegarde automatique des fichiers ESP32 via FTP"
+    },
+    "version": "1.0.0",
+    "url": "https://github.com/eciruam35/esp32-backup-manager",
+    "license": "GPL-3.0",
+    "maintainer": {
+        "name": "eciruam35",
+        "email": "eciruam35@gmail.com"
+    },
+    "multi_instance": false,
+    "services": ["nginx", "php7.4"],
+    "requirements": {
+        "yunohost": ">= 4.3.0"
+    },
+    "arguments": {
+        "install": [
+            {"name": "domain", "type": "domain"},
+            {"name": "path", "type": "path", "default": "/esp32-backup"},
+            {"name": "admin", "type": "user"},
+            {"name": "ftp_host", "type": "string", "ask": {"en": "ESP32 FTP host", "fr": "Hôte FTP ESP32"}},
+            {"name": "ftp_port", "type": "string", "default": "21"},
+            {"name": "ftp_user", "type": "string"},
+            {"name": "ftp_password", "type": "password"}
+        ]
+    }
+}
